@@ -8,7 +8,7 @@ This project processes audio recordings of team meetings and automatically:
 - Extracts **deadline**, **priority**, and **dependencies** where possible  
 - Outputs the result as a **JSON list** and a **table**
 
-Speech-to-text uses Whisper, but **task identification and assignment are done using custom rule-based logic**, not external classification APIs.
+
 
 ---
 
@@ -42,3 +42,4 @@ meeting-task-assignment/
 ├─ app.py                      # Streamlit web UI
 ├─ requirements.txt
 └─ README.md
+
