@@ -1,0 +1,14 @@
+# ignore virtual environments and Python internals
+venv/
+Lib/
+Scripts/
+share/
+etc/
+pyvenv.cfg
+
+# ignore IDE + cache stuff
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+.idea/

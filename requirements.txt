@@ -1,0 +1,8 @@
+openai-whisper
+torch
+numpy
+pandas
+spacy
+dateparser
+python-dateutil
+streamlit
