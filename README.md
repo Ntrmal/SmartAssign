@@ -20,7 +20,7 @@ Technologies Used
 - `spaCy` (`en_core_web_sm`) for NLP  
 - `dateparser` + regex for deadlines  
 - Pure Python logic for task classification & assignment  
-- (Optional) Streamlit for a simple web UI  
+- Streamlit for a simple web UI  
 
 ---
 
@@ -131,6 +131,7 @@ Phrases like depends on the login bug fix are attached as dependency for that ta
 Assignment
 If a person’s name is mentioned in the sentence, assign directly to them.
 Otherwise, score each team member based on their role and skills and assign to the best match.
+
 
 
 
