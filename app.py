@@ -118,7 +118,7 @@ def main():
         st.dataframe(df, use_container_width=True)
 
         # Download JSON
-        st.subheader("⬇ Download Results")
+        st.subheader(" Download Results")
         json_str = json.dumps(tasks, indent=4, ensure_ascii=False)
         st.download_button(
             label="Download tasks as JSON",

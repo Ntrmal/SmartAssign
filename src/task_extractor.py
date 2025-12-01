@@ -33,7 +33,7 @@ PRIORITY_KEYWORDS = {
 
 def sentence_contains_task(sentence: str) -> bool:
     """
-    Heuristic: does this sentence look like it contains a task?
+    does this sentence look like it contains a task?
     """
     s = sentence.lower()
 
@@ -74,14 +74,14 @@ def detect_deadline(sentence: str) -> Optional[str]:
     """
     s = sentence.lower()
 
-    # Simple patterns
+    #  patterns
     deadline_patterns = [
         r"by (tomorrow(?: morning| evening)?)",
-        r"by ([a-z]+day)",               # by Friday, by Monday
-        r"before ([^.,;]+)",            # before Friday's release
+        r"by ([a-z]+day)",
+        r"before ([^.,;]+)",
         r"(tomorrow(?: morning| evening)?)",
         r"(end of this week|by end of this week)",
-        r"(next [a-z]+day)",            # next Monday, next Tuesday
+        r"(next [a-z]+day)",
         r"(next sprint)",
         r"(this week)",
         r"(by [0-9]{1,2}(st|nd|rd|th)?)"
@@ -92,11 +92,11 @@ def detect_deadline(sentence: str) -> Optional[str]:
         if m:
             return m.group(0).strip()
 
-    # Fallback: try full-sentence parsing with dateparser.parse
+
     try:
         parsed = dateparser.parse(sentence)
         if parsed:
-            # we just return the original sentence as the deadline phrase
+
             return sentence.strip()
     except Exception:
         pass
@@ -104,7 +104,7 @@ def detect_deadline(sentence: str) -> Optional[str]:
     return None
 def detect_priority(sentence: str) -> str:
     """
-    Determine priority from the sentence based on keywords.
+    Determining priority from the sentence based on keywords.
     """
     s = sentence.lower()
 
@@ -127,23 +127,23 @@ def detect_dependencies(sentence: str) -> Optional[str]:
 
 def clean_description(sentence: str) -> str:
     """
-    Clean up a sentence to be a nicer task description.
+
     - remove leading names & filler like 'oh,', 'one more thing -', etc.
     """
     s = sentence.strip()
 
-    # Remove leading "Oh," / "Oh," etc.
+    # Remove leading "Oh" .
     s = re.sub(r"^(oh|so|and|also)[, -]+", "", s, flags=re.IGNORECASE)
 
-    # Remove leading "One more thing -"
+    # Remove leading "One more thing"
     s = re.sub(r"^one more thing[,\s-]+", "", s, flags=re.IGNORECASE)
 
     # Remove leading name ("Sakshi," "Mohit," etc.)
     s = re.sub(r"^[A-Z][a-z]+[,:\-]\s*", "", s)
 
-    # Lowercase first letter for consistency, but keep as sentence
+
     if s and s[0].isupper():
-        # Don't force to lower if it's an acronym; simple heuristic
+
         if len(s) > 1 and s[:2].isalpha():
             s = s[0].lower() + s[1:]
 
@@ -176,7 +176,7 @@ def classify_sentence(sentence: str) -> str:
     """
     s = sentence.lower().strip()
 
-    # Meta / greeting
+    # greeting
     if not s:
         return "other"
     if "let's discuss" in s and "priorities" in s:
@@ -206,9 +206,7 @@ def build_reason(
     explicit_assignee: Optional[str],
     team_members: List[Dict]
 ) -> str:
-    """
-    Build a simple human-readable reason for assignment.
-    """
+
     if explicit_assignee:
         return f"Assigned to {assigned_to} because they were mentioned explicitly in the meeting."
 
@@ -230,13 +228,7 @@ def build_reason(
     return f"Assigned to {assigned_to} based on role and skills similarity."
 
 def extract_tasks(transcript: str, team_members: List[Dict]) -> List[Dict]:
-    """
-    Main entry: extract tasks from transcript.
-    Uses contextual logic:
-      - 'task' sentences create tasks
-      - subsequent 'deadline' / 'priority' / 'dependency' sentences
-        are attached to the last task instead of creating new tasks.
-    """
+
     doc = _nlp(transcript)
     sentences = [sent.text.strip() for sent in doc.sents if sent.text.strip()]
 
@@ -247,9 +239,7 @@ def extract_tasks(transcript: str, team_members: List[Dict]) -> List[Dict]:
     for sent in sentences:
         kind = classify_sentence(sent)
 
-        # Debug (optional – can comment out later)
-        # print(f"[DEBUG] Sentence: {sent}")
-        # print(f"        Kind: {kind}")
+
 
         if kind == "task":
             description = clean_description(sent)
@@ -278,19 +268,19 @@ def extract_tasks(transcript: str, team_members: List[Dict]) -> List[Dict]:
             task_id += 1
 
         elif last_task:
-            # Attach context to the last created task
+
             if kind == "deadline":
-                # Only override if no deadline set yet
+
                 if not last_task.get("deadline"):
                     last_task["deadline"] = detect_deadline(sent)
 
             elif kind == "priority":
-                # Always allow priority upgrade (e.g., from Medium to Critical)
+
                 last_task["priority"] = detect_priority(sent)
 
             elif kind == "dependency":
                 last_task["dependency"] = detect_dependencies(sent) or sent.strip()
 
-            # kind == "other" → ignore
+
 
     return tasks

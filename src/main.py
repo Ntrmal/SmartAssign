@@ -8,7 +8,7 @@ from src.stt_whisper import transcribe_audio
 from src.task_extractor import extract_tasks
 
 # Base directories
-BASE_DIR = Path(__file__).resolve().parent.parent  # root
+BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
 TEAM_FILE = DATA_DIR / "team_members.json"
 TRANSCRIPT_FILE = DATA_DIR / "last_transcript.txt"
@@ -35,7 +35,7 @@ def save_tasks(tasks: List[Dict], path: Path = TASKS_FILE):
 
 def pretty_print_tasks_table(tasks: List[Dict]):
     """
-    Print tasks in a tabular format.
+    Printing tasks in a tabular format.
     Columns: #, Description, Assigned To, Deadline, Priority, Dependencies, Reason
     """
     if not tasks:
@@ -92,7 +92,7 @@ def main():
         print("[MAIN] Using sample transcript from PDF (TEST MODE)")
         transcript = get_sample_transcript_from_pdf()
     else:
-        audio_path = DATA_DIR / "sample-2.mp3"  # change name if needed
+        audio_path = DATA_DIR / "sample-2.mp3"
         print(f"[MAIN] Using Whisper on audio: {audio_path}")
         transcript = transcribe_audio(str(audio_path))
 

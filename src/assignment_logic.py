@@ -74,14 +74,11 @@ def resolve_assignee(
     """
     Decide who should be assigned this task.
 
-    1. If explicit_assignee is given (name directly mentioned), use that.
-    2. Otherwise, compute a score for each member based on their role & skills
-       and pick the highest-scoring one.
     """
     if team_members is None or len(team_members) == 0:
         return explicit_assignee or "Unassigned"
 
-    # If name already mentioned explicitly, trust that
+    # If name already mentioned explicitly
     if explicit_assignee:
         return explicit_assignee
 
