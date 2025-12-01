@@ -33,21 +33,38 @@ def save_tasks(tasks: List[Dict], path: Path = TASKS_FILE):
     print(f"[MAIN] Tasks JSON saved to {path.resolve()}")
 
 
-def pretty_print_tasks(tasks: List[Dict]):
-    print("\n==== IDENTIFIED TASKS ====\n")
+def pretty_print_tasks_table(tasks: List[Dict]):
+    """
+    Print tasks in a tabular format.
+    Columns: #, Description, Assigned To, Deadline, Priority, Dependencies, Reason
+    """
     if not tasks:
-        print("No tasks detected.")
+        print("\nNo tasks detected.\n")
         return
 
+    print("\n==== TASK SUMMARY ====\n")
+    header = f"{'#':<3} {'Description':<35} {'Assigned To':<10} {'Deadline':<20} {'Priority':<10} {'Dependencies':<30} {'Reason'}"
+    print("-" * len(header))
+    print(header)
+    print("-" * len(header))
+
     for t in tasks:
-        print(f"Task #{t['id']}")
-        print(f"  Description : {t['description']}")
-        print(f"  Assigned To : {t['assigned_to']} (explicit: {t['explicit_assignee']})")
-        print(f"  Deadline    : {t['deadline']}")
-        print(f"  Priority    : {t['priority']}")
-        print(f"  Dependency  : {t['dependency']}")
-        print(f"  From        : {t['source_sentence']}")
-        print("-" * 60)
+        desc = t.get("description") or ""
+        assigned = t.get("assigned_to") or "Unassigned"
+        deadline = t.get("deadline") or "-"
+        priority = t.get("priority") or "-"
+        dependency = t.get("dependency") or "-"
+        reason = t.get("reason") or "-"
+
+        # shorten for display if very long
+        desc_disp = (desc[:30] + "...") if len(desc) > 33 else desc
+        dep_disp = (dependency[:27] + "...") if len(dependency) > 30 else dependency
+        reason_disp = (reason[:40] + "...") if len(reason) > 43 else reason
+
+        line = f"{t['id']:<3} {desc_disp:<35} {assigned:<10} {deadline:<20} {priority:<10} {dep_disp:<30} {reason_disp}"
+        print(line)
+
+    print("-" * len(header))
 
 
 def get_sample_transcript_from_pdf() -> str:
@@ -82,7 +99,7 @@ def main():
     save_transcript(transcript)
 
     tasks = extract_tasks(transcript, team_members)
-    pretty_print_tasks(tasks)
+    pretty_print_tasks_table(tasks)
     save_tasks(tasks)
 
 

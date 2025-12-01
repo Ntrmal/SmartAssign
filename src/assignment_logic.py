@@ -1,65 +1,99 @@
 # src/assignment_logic.py
 
+from __future__ import annotations
+
 from typing import List, Dict, Optional
 import re
 
 
-def normalize(text: str) -> str:
-    return text.lower().strip()
+def tokenize(text: str) -> list[str]:
+    """
+    Simple tokenizer: letters only, lowercase, remove stopwords.
+    Used to compute similarity between task text and member skills.
+    """
+    words = re.findall(r"[a-zA-Z]+", text.lower())
+    stopwords = {
+        "the", "a", "an", "to", "for", "and", "or", "is", "are", "of", "we", "this",
+        "that", "it", "in", "on", "with", "by", "from", "at", "as", "be", "can",
+        "our", "your", "their", "some", "any"
+    }
+    return [w for w in words if w not in stopwords]
 
 
 def score_member_for_task(task_description: str, member: Dict) -> int:
     """
-    Simple scoring based on keyword overlap between task description and member skills/role.
+    Compute a score indicating how well this member fits the task,
+    based on overlap between the task description and the member's
+    role + skills + some role-specific boosts.
     """
-    text = normalize(task_description)
+    task_tokens = set(tokenize(task_description))
 
-    score = 0
-    # Skill matches
-    for skill in member.get("skills", []):
-        if normalize(skill) in text:
-            score += 3
+    role = member.get("role", "") or ""
+    skills = member.get("skills", []) or []
 
+    member_text_parts = [role] + skills
+    member_tokens = set()
+    for part in member_text_parts:
+        member_tokens.update(tokenize(part))
 
-    role = normalize(member.get("role", ""))
-    if "frontend" in role and any(w in text for w in ["ui", "frontend", "screen", "login", "button", "react"]):
-        score += 4
-    if "backend" in role and any(w in text for w in ["database", "db", "api", "performance", "optimization", "backend"]):
-        score += 4
-    if "designer" in role or "ui/ux" in role:
-        if any(w in text for w in ["design", "onboarding", "screen", "ui", "ux", "mockup", "layout"]):
-            score += 4
-    if "qa" in role or "tester" in role:
-        if any(w in text for w in ["test", "testing", "unit tests", "automation", "quality"]):
-            score += 4
+    # Base score: token overlap
+    overlap = task_tokens & member_tokens
+    score = len(overlap) * 3  # each overlap worth 3 pts
+
+    # Role-based boosts
+    role_lower = role.lower()
+
+    # Frontend-ish
+    if "frontend" in role_lower or "front-end" in role_lower:
+        if any(w in task_tokens for w in ["ui", "screen", "frontend", "react", "component", "layout"]):
+            score += 2
+
+    # Backend-ish
+    if "backend" in role_lower or "back-end" in role_lower:
+        if any(w in task_tokens for w in ["database", "db", "api", "apis", "performance", "latency", "server"]):
+            score += 2
+
+    # UI/UX / design
+    if "designer" in role_lower or "ux" in role_lower or "ui " in role_lower:
+        if any(w in task_tokens for w in ["design", "onboarding", "flow", "mockup", "screen", "figma"]):
+            score += 2
+
+    # QA / testing
+    if "qa" in role_lower or "test" in role_lower:
+        if any(w in task_tokens for w in ["test", "tests", "testing", "automation", "quality"]):
+            score += 2
 
     return score
 
 
 def resolve_assignee(
-    task_description: str,
-    explicit_assignee_name: Optional[str],
+    description: str,
+    explicit_assignee: Optional[str],
     team_members: List[Dict]
-) -> Optional[str]:
+) -> str:
     """
-    Decide which team member should be assigned to a task.
-    1. If an explicit name is given & exists in team → use that.
-    2. Otherwise, pick the member with highest score based on skills/role.
-    """
-    # 1) Explicit assignee
-    if explicit_assignee_name:
-        for member in team_members:
-            if normalize(member["name"]) == normalize(explicit_assignee_name):
-                return member["name"]
+    Decide who should be assigned this task.
 
-    # 2) Best match by scoring
-    best_member = None
+    1. If explicit_assignee is given (name directly mentioned), use that.
+    2. Otherwise, compute a score for each member based on their role & skills
+       and pick the highest-scoring one.
+    """
+    if team_members is None or len(team_members) == 0:
+        return explicit_assignee or "Unassigned"
+
+    # If name already mentioned explicitly, trust that
+    if explicit_assignee:
+        return explicit_assignee
+
+    # Otherwise, score all members
     best_score = -1
+    best_member_name = team_members[0].get("name", "Unassigned")
 
     for member in team_members:
-        s = score_member_for_task(task_description, member)
-        if s > best_score:
-            best_score = s
-            best_member = member
+        name = member.get("name", "Unknown")
+        member_score = score_member_for_task(description, member)
+        if member_score > best_score:
+            best_score = member_score
+            best_member_name = name
 
-    return best_member["name"] if best_member else None
+    return best_member_name
