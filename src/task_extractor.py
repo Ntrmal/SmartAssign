@@ -10,7 +10,7 @@ import spacy
 
 from src.assignment_logic import resolve_assignee
 
-# Load spaCy model once
+# Loading the model
 _nlp = spacy.load("en_core_web_sm")
 
 # Common verbs that indicate tasks / actions
